@@ -171,10 +171,13 @@
         </div>
     </div>
 
+    <!-- Hidden script tag to hold graph data -->
+    <script id="graph-data" type="application/json">{{ graph_json|safe }}</script>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         // Render the Plotly graph
-        var graphData = {{ graph_json|safe }};
+        var graphData = JSON.parse(document.getElementById('graph-data').textContent);
         Plotly.newPlot('graph', graphData.data, graphData.layout, {responsive: true});
 
         // Refresh data function
