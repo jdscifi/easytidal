@@ -1,0 +1,5 @@
+Sample output for Archive_Process
+Execution started at: 2025-08-28T09:45:04.318556
+Job failed with error.
+Error: Connection timeout to database.
+Execution failed at: 2025-08-28T10:15:04.318556

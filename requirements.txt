@@ -1,0 +1,9 @@
+requests
+networkx
+matplotlib
+flask
+plotly
+dash
+dash-cytoscape
+python-dotenv
+cryptography

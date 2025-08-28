@@ -1,0 +1,5 @@
+Sample output for Data_Extract_Job
+Execution started at: 2025-08-28T10:45:04.318556
+Job completed successfully.
+Processed 1000 records.
+Execution finished at: 2025-08-28T11:00:04.318556

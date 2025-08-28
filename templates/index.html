@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EasyTidal - Job Monitor</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .status-badge {
+            font-size: 0.8em;
+        }
+        .card-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .graph-container {
+            height: 600px;
+            border: 1px solid #dee2e6;
+            border-radius: 0.375rem;
+        }
+        .metric-card {
+            border-left: 4px solid #007bff;
+        }
+    </style>
+</head>
+<body class="bg-light">
+    <nav class="navbar navbar-dark bg-dark">
+        <div class="container-fluid">
+            <span class="navbar-brand mb-0 h1">
+                <i class="fas fa-sitemap"></i> EasyTidal - Job Monitor
+            </span>
+            <div class="d-flex">
+                <button class="btn btn-outline-light me-2" onclick="refreshData()">
+                    <i class="fas fa-sync-alt"></i> Refresh
+                </button>
+                <a href="/history" class="btn btn-outline-light">
+                    <i class="fas fa-history"></i> History
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid mt-4">
+        <!-- Metrics Row -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card metric-card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h6 class="card-title text-muted">Total Jobs</h6>
+                                <h3 class="mb-0">{{ job_count }}</h3>
+                            </div>
+                            <div class="align-self-center">
+                                <i class="fas fa-tasks fa-2x text-primary"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card metric-card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h6 class="card-title text-muted">Dependencies</h6>
+                                <h3 class="mb-0">{{ edge_count }}</h3>
+                            </div>
+                            <div class="align-self-center">
+                                <i class="fas fa-arrow-right fa-2x text-success"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card metric-card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h6 class="card-title text-muted">Data Source</h6>
+                                <h3 class="mb-0">
+                                    {% if data_source == 'cache' %}
+                                        <span class="badge bg-info">Cache</span>
+                                    {% elif data_source == 'api' %}
+                                        <span class="badge bg-success">API</span>
+                                    {% else %}
+                                        <span class="badge bg-warning">Sample</span>
+                                    {% endif %}
+                                </h3>
+                            </div>
+                            <div class="align-self-center">
+                                <i class="fas fa-database fa-2x text-info"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card metric-card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h6 class="card-title text-muted">Cache Status</h6>
+                                <h3 class="mb-0">
+                                    {% if cache_valid %}
+                                        <span class="badge bg-success">Valid</span>
+                                    {% else %}
+                                        <span class="badge bg-danger">Expired</span>
+                                    {% endif %}
+                                </h3>
+                            </div>
+                            <div class="align-self-center">
+                                <i class="fas fa-clock fa-2x text-warning"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- Job Flow Graph -->
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-project-diagram"></i> Job Flow Graph</h5>
+                    </div>
+                    <div class="card-body p-0">
+                        <div id="graph" class="graph-container"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Jobs List -->
+            <div class="col-lg-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-list"></i> Jobs ({{ jobs|length }})</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="list-group list-group-flush">
+                            {% for job in jobs %}
+                            <div class="list-group-item">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div class="flex-grow-1">
+                                        <div class="d-flex justify-content-between align-items-center mb-1">
+                                            <strong>{{ job.name }}</strong>
+                                            <div>
+                                                {% if job.status == 'success' %}
+                                                    <span class="badge bg-success status-badge">Success</span>
+                                                {% elif job.status == 'running' %}
+                                                    <span class="badge bg-primary status-badge">Running</span>
+                                                {% elif job.status == 'pending' %}
+                                                    <span class="badge bg-warning status-badge">Pending</span>
+                                                {% elif job.status == 'failed' %}
+                                                    <span class="badge bg-danger status-badge">Failed</span>
+                                                {% else %}
+                                                    <span class="badge bg-secondary status-badge">Unknown</span>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                        <small class="text-muted d-block">ID: {{ job.id }}</small>
+                                        {% if job.start_time %}
+                                            <small class="text-muted d-block">
+                                                <i class="fas fa-play-circle"></i> Started: {{ job.start_time.split('T')[0] }} {{ job.start_time.split('T')[1][:8] }}
+                                            </small>
+                                        {% endif %}
+                                        {% if job.end_time %}
+                                            <small class="text-muted d-block">
+                                                <i class="fas fa-stop-circle"></i> Ended: {{ job.end_time.split('T')[0] }} {{ job.end_time.split('T')[1][:8] }}
+                                            </small>
+                                        {% elif job.status == 'running' %}
+                                            <small class="text-primary d-block">
+                                                <i class="fas fa-spinner fa-spin"></i> Currently running...
+                                            </small>
+                                        {% elif job.status == 'pending' %}
+                                            <small class="text-warning d-block">
+                                                <i class="fas fa-clock"></i> Waiting to start...
+                                            </small>
+                                        {% endif %}
+                                        
+                                        <!-- Job output link for completed/failed jobs -->
+                                        {% if job.status in ['success', 'failed'] %}
+                                            <div class="mt-2">
+                                                <button class="btn btn-sm btn-outline-primary" onclick="viewJobOutput('{{ job.id }}', '{{ job.name }}')">
+                                                    <i class="fas fa-file-alt"></i> View Output
+                                                </button>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Render the Plotly graph
+        var graphData = {{ graph_json | safe }};
+        Plotly.newPlot('graph', graphData.data, graphData.layout, {responsive: true});
+
+        // Function to view job output
+        function viewJobOutput(jobId, jobName) {
+            fetch(`/api/job/${jobId}/output`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.output) {
+                        // Create modal to show output
+                        const modalHtml = `
+                            <div class="modal fade" id="outputModal" tabindex="-1" aria-labelledby="outputModalLabel" aria-hidden="true">
+                                <div class="modal-dialog modal-xl">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title" id="outputModalLabel">
+                                                <i class="fas fa-file-alt"></i> Job Output: ${jobName}
+                                            </h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <pre class="bg-light p-3 rounded" style="max-height: 400px; overflow-y: auto;">${data.output}</pre>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <small class="text-muted me-auto">Job ID: ${jobId}</small>
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                        
+                        // Remove existing modal if present
+                        const existingModal = document.getElementById('outputModal');
+                        if (existingModal) {
+                            existingModal.remove();
+                        }
+                        
+                        // Add modal to page and show it
+                        document.body.insertAdjacentHTML('beforeend', modalHtml);
+                        const modal = new bootstrap.Modal(document.getElementById('outputModal'));
+                        modal.show();
+                        
+                        // Clean up modal when hidden
+                        document.getElementById('outputModal').addEventListener('hidden.bs.modal', function () {
+                            this.remove();
+                        });
+                    } else {
+                        alert('No output available for this job.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching job output:', error);
+                    alert('Failed to fetch job output. Please try again.');
+                });
+        }
+
+        // Refresh data function
+        function refreshData() {
+            const refreshBtn = document.querySelector('button[onclick="refreshData()"]');
+            const originalContent = refreshBtn.innerHTML;
+            refreshBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Refreshing...';
+            refreshBtn.disabled = true;
+
+            fetch('/api/refresh')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        location.reload();
+                    } else {
+                        alert('Failed to refresh: ' + data.message);
+                        refreshBtn.innerHTML = originalContent;
+                        refreshBtn.disabled = false;
+                    }
+                })
+                .catch(error => {
+                    alert('Error: ' + error.message);
+                    refreshBtn.innerHTML = originalContent;
+                    refreshBtn.disabled = false;
+                });
+        }
+
+        // Auto-refresh every 5 minutes
+        setInterval(() => {
+            console.log('Auto-refreshing data...');
+            refreshData();
+        }, 300000);
+    </script>
+</body>
+</html>

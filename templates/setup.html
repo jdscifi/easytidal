@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Setup - EasyTidal</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .setup-container {
+            max-width: 800px;
+            margin: 50px auto;
+        }
+        .config-section {
+            background-color: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .terminal-box {
+            background-color: #1a1a1a;
+            color: #00ff00;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body class="bg-light">
+    <nav class="navbar navbar-dark bg-primary">
+        <div class="container-fluid">
+            <span class="navbar-brand mb-0 h1">
+                <i class="fas fa-cog"></i> EasyTidal Setup
+            </span>
+            <a href="/" class="btn btn-outline-light">
+                <i class="fas fa-home"></i> Back to Dashboard
+            </a>
+        </div>
+    </nav>
+
+    <div class="container setup-container">
+        <div class="card">
+            <div class="card-header">
+                <h4><i class="fas fa-wrench"></i> Configuration Setup</h4>
+            </div>
+            <div class="card-body">
+                
+                <!-- Current Configuration -->
+                <div class="config-section">
+                    <h5><i class="fas fa-info-circle"></i> Current Configuration</h5>
+                    <table class="table table-sm">
+                        <tr>
+                            <td><strong>API Base URL:</strong></td>
+                            <td><code>{{ api_url }}</code></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Job Directory:</strong></td>
+                            <td><code>{{ job_directory }}</code></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Credentials:</strong></td>
+                            <td>
+                                {% if credentials_configured %}
+                                    <span class="badge bg-success"><i class="fas fa-check"></i> Configured</span>
+                                {% else %}
+                                    <span class="badge bg-danger"><i class="fas fa-times"></i> Not Configured</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+
+                <!-- Credential Setup -->
+                <div class="config-section">
+                    <h5><i class="fas fa-shield-alt"></i> Credential Setup</h5>
+                    <p>To configure encrypted credentials for Tidal API access:</p>
+                    
+                    <div class="terminal-box">
+                        <div>$ python setup_credentials.py</div>
+                    </div>
+                    
+                    <p class="small text-muted">
+                        This will securely encrypt your username and password and store them in environment variables.
+                    </p>
+                </div>
+
+                <!-- API Configuration -->
+                <div class="config-section">
+                    <h5><i class="fas fa-server"></i> API Configuration</h5>
+                    <p>Update the API configuration in the <code>.env</code> file:</p>
+                    
+                    <div class="alert alert-info">
+                        <h6>Environment Variables (.env file):</h6>
+                        <ul class="mb-0">
+                            <li><code>API_BASE_URL</code> - Your Tidal Automation server URL</li>
+                            <li><code>JOB_DIRECTORY</code> - The job directory to monitor</li>
+                            <li><code>CACHE_EXPIRY_HOURS</code> - Cache expiration time (default: 24)</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="terminal-box">
+                        <div># Example .env file content:</div>
+                        <div>API_BASE_URL=https://your-tidal-server.com</div>
+                        <div>JOB_DIRECTORY=/production/etl</div>
+                        <div>CACHE_EXPIRY_HOURS=24</div>
+                    </div>
+                </div>
+
+                <!-- Testing -->
+                <div class="config-section">
+                    <h5><i class="fas fa-vial"></i> Test Configuration</h5>
+                    <p>After setting up credentials and configuration, test the connection:</p>
+                    
+                    <div class="terminal-box">
+                        <div>$ python test_credentials.py</div>
+                    </div>
+                    
+                    <p class="small text-muted">
+                        This will verify that the credentials are correctly configured and the API is accessible.
+                    </p>
+                </div>
+
+                <!-- Troubleshooting -->
+                <div class="config-section">
+                    <h5><i class="fas fa-question-circle"></i> Troubleshooting</h5>
+                    <div class="accordion" id="troubleshootingAccordion">
+                        
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#connectionError">
+                                    Connection Errors
+                                </button>
+                            </h2>
+                            <div id="connectionError" class="accordion-collapse collapse" data-bs-parent="#troubleshootingAccordion">
+                                <div class="accordion-body">
+                                    <ul>
+                                        <li>Verify the API base URL is correct and accessible</li>
+                                        <li>Check network connectivity to the Tidal server</li>
+                                        <li>Ensure firewalls allow outbound connections</li>
+                                        <li>Verify SSL certificates if using HTTPS</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#authError">
+                                    Authentication Errors
+                                </button>
+                            </h2>
+                            <div id="authError" class="accordion-collapse collapse" data-bs-parent="#troubleshootingAccordion">
+                                <div class="accordion-body">
+                                    <ul>
+                                        <li>Verify username and password are correct</li>
+                                        <li>Check if account has API access permissions</li>
+                                        <li>Ensure account is not locked or expired</li>
+                                        <li>Verify the job directory path exists and is accessible</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#apiError">
+                                    API Errors
+                                </button>
+                            </h2>
+                            <div id="apiError" class="accordion-collapse collapse" data-bs-parent="#troubleshootingAccordion">
+                                <div class="accordion-body">
+                                    <ul>
+                                        <li>Check if Tidal API is enabled and running</li>
+                                        <li>Verify API endpoints are accessible</li>
+                                        <li>Ensure API version compatibility</li>
+                                        <li>Check Tidal server logs for errors</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        
+                    </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="text-center mt-4">
+                    <a href="/" class="btn btn-primary me-2">
+                        <i class="fas fa-arrow-left"></i> Back to Dashboard
+                    </a>
+                    <button class="btn btn-success" onclick="window.location.reload()">
+                        <i class="fas fa-sync-alt"></i> Test Connection
+                    </button>
+                </div>
+                
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
